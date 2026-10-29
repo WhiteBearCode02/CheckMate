@@ -6,29 +6,25 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// Set of Material typography styles to start with
+private fun vehicleText(size: Int, height: Int, weight: FontWeight = FontWeight.Normal) =
+    TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = weight,
+        fontSize = size.sp,
+        lineHeight = height.sp,
+    )
+
 val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    )
-    */
+    headlineLarge = vehicleText(34, 42, FontWeight.Bold),
+    headlineMedium = vehicleText(28, 36, FontWeight.Bold),
+    headlineSmall = vehicleText(24, 32, FontWeight.Bold),
+    titleLarge = vehicleText(24, 32, FontWeight.SemiBold),
+    titleMedium = vehicleText(22, 30, FontWeight.SemiBold),
+    titleSmall = vehicleText(20, 28, FontWeight.SemiBold),
+    bodyLarge = vehicleText(22, 32),
+    bodyMedium = vehicleText(20, 30),
+    bodySmall = vehicleText(18, 26),
+    labelLarge = vehicleText(20, 28, FontWeight.SemiBold),
+    labelMedium = vehicleText(18, 26, FontWeight.SemiBold),
+    labelSmall = vehicleText(18, 26),
 )
