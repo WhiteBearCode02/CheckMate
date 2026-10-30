@@ -5,6 +5,8 @@ import com.whitebearcode02.checkmate.vehicle.domain.model.*
 import com.whitebearcode02.checkmate.vehicle.ui.navigation.CheckMateScreen
 import java.util.UUID
 
+enum class LocalStorageStatus { MEMORY_ONLY, LOADING, READY, ERROR }
+
 data class CheckMateUiState(
     val vehicle: VehicleState = VehicleState(),
     val phoneConnection: ConnectionState = ConnectionState.DISCONNECTED,
@@ -17,6 +19,10 @@ data class CheckMateUiState(
     val canShowDetails: Boolean = false,
     val canSelectMock: Boolean = false,
     val notice: String? = null,
+    val storageStatus: LocalStorageStatus = LocalStorageStatus.MEMORY_ONLY,
+    val storageBusy: Boolean = false,
+    val syncMetadata: Map<UUID, AccidentSyncMetadata> = emptyMap(),
+    val evidence: Map<UUID, List<EvidenceMetadata>> = emptyMap(),
 )
 
 data class CheckMateActions(
@@ -33,4 +39,5 @@ data class CheckMateActions(
     val retryVehicleConnection: () -> Unit = {},
     val selectVehicleSource: (DataSource) -> Unit = {},
     val openSafetyGuide: () -> Unit = {},
+    val startAccidentResponse: () -> Unit = {},
 )

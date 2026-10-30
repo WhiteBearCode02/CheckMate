@@ -78,7 +78,7 @@ fun CheckMateApp(
                 }
                 item {
                     Text(
-                        "Phase 2 · 차량 데이터와 사고 기록은 메모리에만 보관되며 앱 프로세스 종료 시 사라집니다.",
+                        "Phase 3A · ${state.storageStatus.label()} · 클라우드·스마트폰·실제 AI 미연동",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

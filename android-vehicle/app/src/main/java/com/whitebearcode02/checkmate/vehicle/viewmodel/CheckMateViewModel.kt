@@ -12,18 +12,28 @@ import com.whitebearcode02.checkmate.vehicle.domain.model.*
 import com.whitebearcode02.checkmate.vehicle.ui.navigation.CheckMateScreen
 import java.util.UUID
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
+import kotlinx.coroutines.withContext
 
 class CheckMateViewModel(
     provider: VehicleDataProvider = PleosVehicleProvider(),
-    private val repository: AccidentRepository = InMemoryAccidentRepository(),
+    repository: AccidentRepository = InMemoryAccidentRepository(),
     private val developerMode: Boolean = false,
     private val providerFactory: ((DataSource) -> VehicleDataProvider)? = null,
+    private val repositoryLoader: (suspend () -> AccidentRepository)? = null,
+    private val repositoryDispatcher: CoroutineDispatcher? = null,
 ) : ViewModel() {
+    private var repository = repository
+    private var repositoryCollection: Job? = null
+    private var storageStatus = if (repositoryLoader == null) LocalStorageStatus.MEMORY_ONLY else LocalStorageStatus.LOADING
+    private var storageBusy = false
     private var provider = provider
     private var providerCollection: Job? = null
     private var foreground = true
@@ -37,17 +47,13 @@ class CheckMateViewModel(
     val actions = CheckMateActions(
         home = ::home,
         triggerMockAccident = {
-            if (developerMode && provider.state.value.source == DataSource.MOCK && allowDetails()) runAction {
-                val event = repository.suspect(provider.state.value, ConnectionState.DISCONNECTED)
-                selectedId = event.eventId
-                screen = screenFor(event.status)
-            }
+            if (developerMode && provider.state.value.source == DataSource.MOCK && allowDetails()) startAccident(EventOrigin.DEMO)
         },
         cancelFalseAlarm = {
-            activeId()?.let { id -> runAction { repository.cancelFalseAlarm(id); screen = CheckMateScreen.HOME } }
+            activeId()?.let { id -> repositoryAction({ repository.cancelFalseAlarm(id) }) { screen = CheckMateScreen.HOME } }
         },
         confirmAccident = {
-            activeId()?.let { id -> runAction { repository.confirm(id); screen = CheckMateScreen.ASSISTANCE } }
+            activeId()?.let { id -> repositoryAction({ repository.confirm(id) }) { screen = CheckMateScreen.ASSISTANCE } }
         },
         openRecords = { if (allowDetails()) runAction { screen = CheckMateScreen.RECORDS } },
         requestMockAnalysis = { if (developerMode) analyze(useMock = true) },
@@ -59,7 +65,7 @@ class CheckMateViewModel(
                 screen = CheckMateScreen.ANALYSIS
             }
         },
-        completeAssistanceStep = { step -> activeId()?.let { id -> runAction { repository.acknowledge(id, step) } } },
+        completeAssistanceStep = { step -> activeId()?.let { id -> repositoryAction({ repository.acknowledge(id, step) }) {} } },
         changeScenario = { scenario ->
             if (developerMode && !cleared && foreground) {
                 if (isKnownMoving(provider.state.value)) {
@@ -73,13 +79,76 @@ class CheckMateViewModel(
         },
         selectVehicleSource = ::selectVehicleSource,
         openSafetyGuide = { runAction { screen = CheckMateScreen.SAFETY_GUIDE } },
+        startAccidentResponse = { startAccident(EventOrigin.VEHICLE_MANUAL) },
     )
 
     init {
         observeProvider()
-        viewModelScope.launch { repository.state.collect { publish() } }
+        observeRepository()
+        if (repositoryLoader != null) viewModelScope.launch {
+            try {
+                this@CheckMateViewModel.repository = withContext(repositoryDispatcher ?: Dispatchers.IO) { repositoryLoader.invoke() }
+                storageStatus = LocalStorageStatus.READY
+                observeRepository()
+                val active = this@CheckMateViewModel.repository.state.value.events.firstOrNull { it.eventId == activeId() }
+                selectedId = active?.eventId
+                // Restoring historical vehicle data never restores current parked trust.
+                if (screen == CheckMateScreen.HOME && active?.status in setOf(AccidentStatus.SUSPECTED, AccidentStatus.CONFIRMED, AccidentStatus.ASSISTANCE)) {
+                    screen = screenFor(requireNotNull(active).status)
+                }
+            } catch (cancelled: CancellationException) { throw cancelled
+            } catch (_: Exception) {
+                storageStatus = LocalStorageStatus.ERROR
+                notice = "사고 저장소를 열 수 없습니다. 기록을 변경하지 않았습니다. 기본 안전 안내를 이용해 주세요."
+            }
+            publish()
+        }
         provider.connect()
         publish()
+    }
+
+    private fun observeRepository() {
+        repositoryCollection?.cancel()
+        repositoryCollection = viewModelScope.launch { repository.state.collect { publish() } }
+    }
+
+    private fun startAccident(origin: EventOrigin) {
+        if (cleared || !foreground) return
+        val vehicle = provider.state.value
+        repositoryAction({ repository.suspect(vehicle, ConnectionState.DISCONNECTED, origin) }) { event ->
+            selectedId = event.eventId
+            screen = screenFor(event.status)
+        }
+    }
+
+    /** Keep the legacy synchronous test API; production disk operations run on the injected IO dispatcher. */
+    private fun <T> repositoryAction(operation: () -> T, after: (T) -> Unit) {
+        if (cleared || !foreground) return
+        if (storageStatus in setOf(LocalStorageStatus.LOADING, LocalStorageStatus.ERROR) || storageBusy) {
+            notice = if (storageStatus == LocalStorageStatus.ERROR) "저장소 오류로 기록을 변경할 수 없습니다. 기본 안전 안내는 계속 이용할 수 있습니다."
+                else "사고 기록 저장을 준비하고 있습니다. 잠시 후 다시 시도해 주세요."
+            publish()
+            return
+        }
+        if (repositoryDispatcher == null) {
+            runAction { after(operation()) }
+        } else {
+            storageBusy = true
+            publish()
+            viewModelScope.launch {
+                try {
+                    notice = null
+                    val result = withContext(repositoryDispatcher) { operation() }
+                    after(result)
+                } catch (cancelled: CancellationException) { throw cancelled
+                } catch (_: Exception) {
+                    notice = "기록을 저장하지 못했습니다. 이전 기록은 유지됩니다. 저장 상태를 확인해 주세요."
+                } finally {
+                    storageBusy = false
+                    publish()
+                }
+            }
+        }
     }
 
     private fun observeProvider() {
@@ -157,8 +226,11 @@ class CheckMateViewModel(
     private fun analyze(useMock: Boolean) {
         if (!allowDetails()) return
         val id = activeId() ?: return
-        runAction {
-            repository.beginAnalysis(id)
+        repositoryAction({
+            if (repository.state.value.events.firstOrNull { it.eventId == id }?.status != AccidentStatus.ANALYSIS_PENDING) {
+                repository.beginAnalysis(id)
+            }
+        }) {
             selectedId = id
             screen = CheckMateScreen.ANALYSIS
             // Only a demonstration result is constructed; no model or paid service is invoked.
@@ -179,7 +251,8 @@ class CheckMateViewModel(
                         status = PredictionStatus.UNAVAILABLE,
                         modelLabel = "실제 AI 미연동 · 분석 결과 없음",
                     )
-                    repository.finishAnalysis(id, result)
+                    // Start a second serialized write only after the first write has completed.
+                    repositoryAction({ repository.finishAnalysis(id, result) }) {}
                 }
             }
         }
@@ -220,6 +293,10 @@ class CheckMateViewModel(
                 canSelectMock = developerMode && providerFactory != null && foreground &&
                     !isKnownMoving(vehicle),
                 notice = notice,
+                storageStatus = storageStatus,
+                storageBusy = storageBusy,
+                syncMetadata = store.syncMetadata,
+                evidence = store.evidence,
             )
         }
     }
@@ -227,6 +304,7 @@ class CheckMateViewModel(
     override fun onCleared() {
         cleared = true
         providerCollection?.cancel()
+        repositoryCollection?.cancel()
         provider.close()
         super.onCleared()
     }

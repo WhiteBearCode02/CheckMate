@@ -24,9 +24,10 @@ data class AccidentEvent(
     val phoneConnection: ConnectionState = ConnectionState.DISCONNECTED,
     val source: DataSource = DataSource.MOCK,
     val sessionId: UUID? = null,
+    val origin: EventOrigin = EventOrigin.DEMO,
 )
 
-enum class EvidenceKind { VIDEO, LOCATION, VEHICLE_SNAPSHOT }
+enum class EvidenceKind { VIDEO, LOCATION, VEHICLE_SNAPSHOT, PHOTO }
 
 /** A private file reference and metadata, never encoded video or raw location coordinates. */
 data class Evidence(
