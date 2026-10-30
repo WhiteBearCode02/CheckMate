@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "event": {
+    "eventId": "5bc24171-907a-4383-a4c8-b76f93695bfd",
+    "occurredAt": "2026-10-31T00:00:00Z",
+    "status": "ASSISTANCE",
+    "vehicleSnapshot": {
+      "connection": "UNKNOWN",
+      "source": "PLEOS",
+      "speedKph": null,
+      "movement": "UNKNOWN",
+      "capabilities": [],
+      "error": null,
+      "readings": [],
+      "lastUpdatedAt": null,
+      "retryAttempt": 0,
+      "sdkInitialization": "NOT_STARTED",
+      "serviceObserved": false
+    },
+    "phoneConnection": "DISCONNECTED",
+    "source": "PLEOS",
+    "sessionId": null,
+    "origin": "VEHICLE_MANUAL"
+  },
+  "ownerUserId": "a57b54a0-bb74-45c4-a76b-e768b85ad298",
+  "createdByDeviceId": "b06ae032-6ee0-4b27-8351-fb690fef296b",
+  "sync": {
+    "localVersion": 2,
+    "remoteVersion": 0,
+    "modifiedAt": "2026-10-31T00:01:00Z",
+    "modifiedByDeviceId": "b06ae032-6ee0-4b27-8351-fb690fef296b",
+    "status": "LOCAL_ONLY"
+  },
+  "assistance": [
+    {
+      "eventId": "5bc24171-907a-4383-a4c8-b76f93695bfd",
+      "step": "OCCUPANT_SAFETY",
+      "completedAt": "2026-10-31T00:01:00Z"
+    }
+  ],
+  "prediction": {
+    "eventId": "5bc24171-907a-4383-a4c8-b76f93695bfd",
+    "status": "NOT_REQUESTED",
+    "accidentType": null,
+    "ownFaultPercent": null,
+    "otherFaultPercent": null,
+    "rationale": null,
+    "modelLabel": "미연동",
+    "source": "MOCK"
+  },
+  "evidence": [],
+  "deletedAt": null
+}

@@ -1,0 +1,767 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CheckMate AccidentRecord schemaVersion 1",
+  "description": "Android SDK independent metadata contract. Additional properties are ignored by the current codec and are not preserved on re-encoding. Semantic identity, ratio sums, vehicle provenance and duplicate-kind checks are required in the receiver. No production cloud API is enabled.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "event",
+    "ownerUserId",
+    "createdByDeviceId",
+    "sync"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "event": {
+      "$ref": "#/$defs/event"
+    },
+    "ownerUserId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "createdByDeviceId": {
+      "$ref": "#/$defs/uuid"
+    },
+    "sync": {
+      "$ref": "#/$defs/sync"
+    },
+    "assistance": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/assistanceAction"
+          },
+          "maxItems": 10000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "prediction": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/prediction"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "evidence": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidenceMetadata"
+          },
+          "maxItems": 10000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "deletedAt": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/utcInstant"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": true,
+  "maxProperties": 256,
+  "propertyNames": {
+    "maxLength": 128
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "utcInstant": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "maxLength": 16384
+    },
+    "vehicleValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "number"
+          ],
+          "properties": {
+            "type": {
+              "const": "NUMBER"
+            },
+            "number": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": true,
+          "maxProperties": 256,
+          "propertyNames": {
+            "maxLength": 128
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "state"
+          ],
+          "properties": {
+            "type": {
+              "const": "STATE"
+            },
+            "state": {
+              "type": "string",
+              "maxLength": 16384
+            }
+          },
+          "additionalProperties": true,
+          "maxProperties": 256,
+          "propertyNames": {
+            "maxLength": 128
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "enabled"
+          ],
+          "properties": {
+            "type": {
+              "const": "BOOLEAN"
+            },
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": true,
+          "maxProperties": 256,
+          "propertyNames": {
+            "maxLength": 128
+          }
+        }
+      ]
+    },
+    "vehicleDatum": {
+      "type": "object",
+      "required": [
+        "kind",
+        "unit",
+        "source",
+        "validity",
+        "support",
+        "permission",
+        "updateState"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "SPEED",
+            "MOVEMENT",
+            "BRAKE",
+            "TURN_SIGNAL",
+            "DRIVING_MODE",
+            "ODOMETER",
+            "DOOR"
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/vehicleValue"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "KPH",
+            "KM",
+            "PERCENT",
+            "STATE",
+            "BOOLEAN"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "MOCK",
+            "PLEOS"
+          ]
+        },
+        "collectedAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/utcInstant"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "validity": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "VALID",
+            "STALE",
+            "INVALID"
+          ]
+        },
+        "support": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "SUPPORTED",
+            "UNSUPPORTED"
+          ]
+        },
+        "permission": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "GRANTED",
+            "DENIED"
+          ]
+        },
+        "updateState": {
+          "type": "string",
+          "enum": [
+            "WAITING",
+            "UPDATING",
+            "STOPPED"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "maxProperties": 256,
+      "propertyNames": {
+        "maxLength": 128
+      }
+    },
+    "vehicleSnapshot": {
+      "type": "object",
+      "required": [
+        "connection",
+        "source",
+        "movement",
+        "retryAttempt",
+        "sdkInitialization",
+        "serviceObserved"
+      ],
+      "properties": {
+        "connection": {
+          "type": "string",
+          "enum": [
+            "DISCONNECTED",
+            "CONNECTING",
+            "CONNECTED",
+            "FAILED",
+            "UNAVAILABLE",
+            "UNSUPPORTED",
+            "PERMISSION_DENIED",
+            "ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "MOCK",
+            "PLEOS"
+          ]
+        },
+        "speedKph": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "movement": {
+          "type": "string",
+          "enum": [
+            "UNKNOWN",
+            "PARKED",
+            "MOVING"
+          ]
+        },
+        "capabilities": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "SPEED",
+                  "MOVEMENT",
+                  "BRAKE",
+                  "TURN_SIGNAL",
+                  "DRIVING_MODE",
+                  "ODOMETER",
+                  "DOOR"
+                ]
+              },
+              "maxItems": 10000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "CONNECTION_FAILED",
+                "PERMISSION_DENIED",
+                "SDK_UNAVAILABLE",
+                "DATA_UNAVAILABLE",
+                "INITIALIZATION_FAILED",
+                "CONNECTION_TIMEOUT",
+                "DATA_STALE",
+                "UNSUPPORTED_FEATURE"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "readings": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/vehicleDatum"
+              },
+              "maxItems": 10000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lastUpdatedAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/utcInstant"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retryAttempt": {
+          "type": "integer",
+          "maximum": 2147483647,
+          "minimum": 0
+        },
+        "sdkInitialization": {
+          "type": "string",
+          "enum": [
+            "NOT_STARTED",
+            "INITIALIZING",
+            "INITIALIZED",
+            "FAILED",
+            "UNSUPPORTED"
+          ]
+        },
+        "serviceObserved": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true,
+      "maxProperties": 256,
+      "propertyNames": {
+        "maxLength": 128
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "eventId",
+        "occurredAt",
+        "status",
+        "vehicleSnapshot",
+        "phoneConnection",
+        "source"
+      ],
+      "properties": {
+        "eventId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "occurredAt": {
+          "$ref": "#/$defs/utcInstant"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "NORMAL",
+            "SUSPECTED",
+            "FALSE_ALARM",
+            "CONFIRMED",
+            "ASSISTANCE",
+            "ANALYSIS_PENDING",
+            "COMPLETED",
+            "UNAVAILABLE"
+          ]
+        },
+        "vehicleSnapshot": {
+          "$ref": "#/$defs/vehicleSnapshot"
+        },
+        "phoneConnection": {
+          "type": "string",
+          "enum": [
+            "DISCONNECTED",
+            "CONNECTING",
+            "CONNECTED",
+            "FAILED",
+            "UNAVAILABLE",
+            "UNSUPPORTED",
+            "PERMISSION_DENIED",
+            "ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "MOCK",
+            "PLEOS"
+          ]
+        },
+        "sessionId": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "VEHICLE_MANUAL",
+                "MOBILE_MANUAL",
+                "MOBILE_SENSOR",
+                "DEMO"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "maxProperties": 256,
+      "propertyNames": {
+        "maxLength": 128
+      }
+    },
+    "sync": {
+      "type": "object",
+      "required": [
+        "localVersion",
+        "remoteVersion",
+        "modifiedAt",
+        "modifiedByDeviceId",
+        "status"
+      ],
+      "properties": {
+        "localVersion": {
+          "type": "integer",
+          "maximum": 9223372036854775807,
+          "minimum": 1
+        },
+        "remoteVersion": {
+          "type": "integer",
+          "maximum": 9223372036854775807,
+          "minimum": 0
+        },
+        "modifiedAt": {
+          "$ref": "#/$defs/utcInstant"
+        },
+        "modifiedByDeviceId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "LOCAL_ONLY",
+            "PENDING",
+            "SYNCED",
+            "RETRY",
+            "CONFLICT",
+            "BLOCKED"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "maxProperties": 256,
+      "propertyNames": {
+        "maxLength": 128
+      }
+    },
+    "assistanceAction": {
+      "type": "object",
+      "required": [
+        "eventId",
+        "step",
+        "completedAt"
+      ],
+      "properties": {
+        "eventId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "step": {
+          "type": "string",
+          "enum": [
+            "OCCUPANT_SAFETY",
+            "SECONDARY_COLLISION",
+            "EMERGENCY_GUIDANCE",
+            "EVIDENCE_CHECK",
+            "INSURANCE_GUIDANCE",
+            "RECORD_REVIEW"
+          ]
+        },
+        "completedAt": {
+          "$ref": "#/$defs/utcInstant"
+        }
+      },
+      "additionalProperties": true,
+      "maxProperties": 256,
+      "propertyNames": {
+        "maxLength": 128
+      }
+    },
+    "evidenceMetadata": {
+      "type": "object",
+      "required": [
+        "evidenceId",
+        "eventId",
+        "kind",
+        "ownerDeviceId",
+        "createdAt",
+        "mimeType",
+        "transferState"
+      ],
+      "properties": {
+        "evidenceId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "eventId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "VIDEO",
+            "LOCATION",
+            "VEHICLE_SNAPSHOT",
+            "PHOTO"
+          ]
+        },
+        "ownerDeviceId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "createdAt": {
+          "$ref": "#/$defs/utcInstant"
+        },
+        "mimeType": {
+          "type": "string",
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "transferState": {
+          "type": "string",
+          "enum": [
+            "LOCAL_ONLY",
+            "METADATA_ONLY",
+            "READY_WITH_CONSENT",
+            "UNAVAILABLE"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "maxProperties": 256,
+      "propertyNames": {
+        "maxLength": 128
+      }
+    },
+    "prediction": {
+      "type": "object",
+      "required": [
+        "eventId",
+        "status",
+        "modelLabel",
+        "source"
+      ],
+      "properties": {
+        "eventId": {
+          "$ref": "#/$defs/uuid"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "NOT_REQUESTED",
+            "PENDING",
+            "AVAILABLE",
+            "UNAVAILABLE",
+            "FAILED"
+          ]
+        },
+        "accidentType": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 16384
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ownFaultPercent": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "otherFaultPercent": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 16384
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "modelLabel": {
+          "type": "string",
+          "maxLength": 16384
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "MOCK",
+            "PLEOS"
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "maxProperties": 256,
+      "propertyNames": {
+        "maxLength": 128
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "AVAILABLE"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "accidentType",
+              "ownFaultPercent",
+              "otherFaultPercent",
+              "rationale"
+            ],
+            "properties": {
+              "accidentType": {
+                "type": "string",
+                "maxLength": 16384,
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "rationale": {
+                "type": "string",
+                "maxLength": 16384,
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "ownFaultPercent": {
+                "type": "integer",
+                "maximum": 100,
+                "minimum": 0
+              },
+              "otherFaultPercent": {
+                "type": "integer",
+                "maximum": 100,
+                "minimum": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "ownFaultPercent": {
+                "type": "null"
+              },
+              "otherFaultPercent": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
