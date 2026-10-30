@@ -6,6 +6,7 @@ import androidx.compose.material3.Text
 import com.whitebearcode02.checkmate.vehicle.domain.model.DataSource
 import com.whitebearcode02.checkmate.vehicle.domain.model.PredictionStatus
 import com.whitebearcode02.checkmate.vehicle.ui.component.VehicleCard
+import com.whitebearcode02.checkmate.vehicle.ui.component.VehicleAction
 import com.whitebearcode02.checkmate.vehicle.viewmodel.CheckMateActions
 import com.whitebearcode02.checkmate.vehicle.viewmodel.CheckMateUiState
 
@@ -25,10 +26,16 @@ internal fun LazyListScope.analysisItems(state: CheckMateUiState, actions: Check
     }
     item {
         VehicleCard("모델 및 분석 상태") {
+            Text("분석 가능 여부: 실제 모델·입력 영상 연결 미설정")
             Text("모델: ${prediction?.modelLabel ?: "미연동"}")
             when (prediction?.status) {
                 null, PredictionStatus.NOT_REQUESTED -> Text("분석 결과 없음 · 분석을 요청하지 않았습니다.")
-                PredictionStatus.PENDING -> Text("분석 대기 중 · 아직 결과가 없습니다.")
+                PredictionStatus.PENDING -> {
+                    Text("분석 대기 중 · 아직 결과가 없습니다.")
+                    if (state.activeEvent?.eventId == event?.eventId) {
+                        VehicleAction("미연동 분석 요청 마무리", actions.requestUnavailableAnalysis, enabled = !state.storageBusy, secondary = true)
+                    }
+                }
                 PredictionStatus.UNAVAILABLE -> Text("판단 불가 · 연결된 AI 모델 또는 신뢰할 수 있는 분석 결과가 없습니다.")
                 PredictionStatus.FAILED -> Text("분석 실패 · 과실비율을 표시할 수 없습니다.")
                 PredictionStatus.AVAILABLE -> {

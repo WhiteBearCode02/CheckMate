@@ -14,12 +14,15 @@ data class AccidentStoreState(
     val assistance: List<AssistanceAction> = emptyList(),
     val predictions: Map<UUID, AccidentPrediction> = emptyMap(),
     val activeEventId: UUID? = null,
+    val syncMetadata: Map<UUID, AccidentSyncMetadata> = emptyMap(),
+    val evidence: Map<UUID, List<EvidenceMetadata>> = emptyMap(),
 )
 
 /** Local API. A persistent implementation can replace this without changing the screens. */
 interface AccidentRepository {
     val state: StateFlow<AccidentStoreState>
     fun suspect(vehicle: VehicleState, phone: ConnectionState): AccidentEvent
+    fun suspect(vehicle: VehicleState, phone: ConnectionState, origin: EventOrigin): AccidentEvent = suspect(vehicle, phone)
     fun cancelFalseAlarm(eventId: UUID)
     fun confirm(eventId: UUID)
     fun acknowledge(eventId: UUID, step: AssistanceStep)
@@ -30,13 +33,18 @@ interface AccidentRepository {
 /** Phase 1 stores demo records in memory only; nothing is uploaded or written to shared storage. */
 class InMemoryAccidentRepository(
     private val clock: Clock = Clock.systemUTC(),
+    initialState: AccidentStoreState = AccidentStoreState(),
+    private val eventOrigin: EventOrigin = EventOrigin.DEMO,
     private val newId: () -> UUID = UUID::randomUUID,
 ) : AccidentRepository {
-    private val mutableState = MutableStateFlow(AccidentStoreState())
+    private val mutableState = MutableStateFlow(initialState)
     override val state = mutableState.asStateFlow()
 
     @Synchronized
-    override fun suspect(vehicle: VehicleState, phone: ConnectionState): AccidentEvent {
+    override fun suspect(vehicle: VehicleState, phone: ConnectionState): AccidentEvent = suspect(vehicle, phone, eventOrigin)
+
+    @Synchronized
+    override fun suspect(vehicle: VehicleState, phone: ConnectionState, origin: EventOrigin): AccidentEvent {
         val snapshot = state.value
         snapshot.events.firstOrNull { it.eventId == snapshot.activeEventId }?.let { return it }
         val eventId = (1..16).asSequence().map { newId() }
@@ -47,7 +55,8 @@ class InMemoryAccidentRepository(
             occurredAt = Instant.now(clock),
             vehicleSnapshot = vehicle,
             phoneConnection = phone,
-            source = DataSource.MOCK,
+            source = if (origin == EventOrigin.DEMO) DataSource.MOCK else vehicle.source,
+            origin = origin,
         )
         mutableState.value = snapshot.copy(events = listOf(event) + snapshot.events, activeEventId = eventId)
         return event

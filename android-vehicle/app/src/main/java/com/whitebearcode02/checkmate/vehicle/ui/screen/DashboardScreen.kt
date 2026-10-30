@@ -20,6 +20,7 @@ import com.whitebearcode02.checkmate.vehicle.ui.component.VehicleAction
 import com.whitebearcode02.checkmate.vehicle.ui.component.VehicleCard
 import com.whitebearcode02.checkmate.vehicle.viewmodel.CheckMateActions
 import com.whitebearcode02.checkmate.vehicle.viewmodel.CheckMateUiState
+import com.whitebearcode02.checkmate.vehicle.viewmodel.LocalStorageStatus
 
 internal fun LazyListScope.dashboardItems(
     state: CheckMateUiState,
@@ -29,19 +30,26 @@ internal fun LazyListScope.dashboardItems(
     item {
         VehicleCard("차량 안전 및 사고 대응") {
             Text(state.activeEvent?.status?.label() ?: "사고 이벤트 대기", style = MaterialTheme.typography.headlineSmall)
-            if (state.activeEvent?.source == DataSource.MOCK) Text("MOCK · 개발용 사고 이벤트", color = MaterialTheme.colorScheme.tertiary)
+            state.activeEvent?.let { Text(it.origin.label(), color = MaterialTheme.colorScheme.tertiary) }
             Text("현재 실제 사고 감지 기능은 연결되어 있지 않습니다.")
+            VehicleAction("직접 사고 대응 시작", actions.startAccidentResponse,
+                enabled = !state.storageBusy && state.storageStatus !in setOf(LocalStorageStatus.LOADING, LocalStorageStatus.ERROR), warning = true)
+            Text("연결·정차를 확인할 수 없어도 사고 여부 확인과 기본 안전 안내를 이용할 수 있습니다.", style = MaterialTheme.typography.bodySmall)
             VehicleAction("기본 사고 대응 안전 안내", actions.openSafetyGuide, warning = true)
         }
     }
     item { ConnectionPanels(state, actions) }
     item {
         VehicleCard("최근 사고 이벤트") {
+            Text(state.storageStatus.label())
+            if (state.storageBusy) Text("기기에 저장 중 · 저장 완료 후 진행할 수 있습니다.")
+            Text("동기화: 클라우드·계정 연결 미설정 · 외부 전송 없음", style = MaterialTheme.typography.bodySmall)
             val event = state.events.firstOrNull()
             if (event == null) {
                 Text("아직 기록된 사고가 없습니다.")
             } else {
-                Text(if (event.source == DataSource.MOCK) "MOCK · 개발용 기록" else "사고 기록", style = MaterialTheme.typography.bodySmall)
+                Text(event.origin.label(), style = MaterialTheme.typography.bodySmall)
+                state.syncMetadata[event.eventId]?.let { Text(it.status.label(), style = MaterialTheme.typography.bodySmall) }
                 Text(event.status.label())
                 Text("발생 시각: ${event.occurredAt.displayTime()}", style = MaterialTheme.typography.bodySmall)
             }
@@ -149,9 +157,11 @@ private fun VehicleState.hasMovementSignal(): Boolean = movement == VehicleMovem
 
 @Composable
 private fun PhoneConnectionPanel(state: CheckMateUiState, modifier: Modifier = Modifier) {
-    VehicleCard("스마트폰 블랙박스", modifier) {
+    VehicleCard("스마트폰 연동", modifier) {
         Text("연결: ${state.phoneConnection.label()}")
-        Text("녹화: 미구현 · 녹화하지 않음")
+        Text("사고 진행 상태 공유: 미연동 · 공통 데이터 계약 준비")
+        Text("블랙박스: 선택 기능 · 현재 녹화하지 않음")
+        Text("스마트폰 녹화 없이도 수동 사고 대응 안내를 이용할 수 있습니다.", style = MaterialTheme.typography.bodySmall)
         Text("영상·위치 수집 및 보험사 전송: 미연동", style = MaterialTheme.typography.bodySmall)
     }
 }

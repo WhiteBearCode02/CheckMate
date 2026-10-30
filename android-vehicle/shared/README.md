@@ -172,3 +172,11 @@ Phase 1 사고 모델과 `eventId` 관계는 유지한다. 아래 항목은 차�
 연결·각 조회 응답 제한은 5초다. 기본 자동 시도는 총 3회(재시도 간격 500ms·1초)이며 권한 거부·미지원은 자동 반복하지 않는다. 수동 재시도는 새 예산을 시작한다. Door의 on-change 알림과 2초 GET 재조회는 동일한 값이 유지되는 정상 상태와 수신 중단을 구분하기 위한 로컬 IPC다.
 
 차량값은 화면 상태 확인에 필요한 최신 샘플만 메모리에 보관하고, 디스크·서버·로그에 저장하지 않는다. 개인정보·위치·영상 수집은 추가하지 않았다. 실제 환경에서의 수신·권한·정리 결과는 [Phase 2 Pleos 검증 가이드](../docs/PHASE2_PLEOS_TEST_GUIDE.md)와 [Phase 2 보고서](../docs/PHASE2_REPORT.md)에서 구분해 관리한다.
+
+## Phase 3 공통 계약 위치 — 2026-10-31
+
+위 Phase 1·2 내용과 예시는 당시 구현의 이력을 보존한 것이다. 현재 앱 간 사고 envelope의 기준은 저장소 루트의 [공통 계약 `shared/contracts`](../../shared/contracts/README.md)이며 [JSON Schema](../../shared/contracts/accident-event.schema.json)와 [예제](../../shared/contracts/accident-event.example.json)를 함께 확인한다. 기존 `eventId`와 모델·상태 전이를 유지하고 소유권·기기·동기화 버전·증거 메타데이터·삭제 표식을 추가했다.
+
+Phase 3A의 차량 앱은 앱 전용 Room 저장소에 사고 기록과 발생 당시 차량 스냅샷·대응 단계·분석 메타데이터를 저장한다. 위의 “메모리에만 보관”·“디스크에 저장하지 않음” 설명은 Phase 1·2 당시 범위이며 현재 사고 기록의 영속성을 설명하지 않는다. 현재 차량 연결·정차 신뢰는 저장된 스냅샷으로 복원하지 않는다. 원본 영상·사진·파일 URI·원시 위치·보험사 개인정보는 공통 사고 envelope에 넣지 않는다.
+
+동기화는 인증·Remote·Coordinator 경계와 개발용 Fake 검증까지다. 실제 클라우드·모바일 양방향 연결·AI 모델·녹화·영상 업로드는 미구현이다. 자세한 범위와 검증 결과는 [Phase 3 보고서](../docs/PHASE3_REPORT.md), [연동 구조](../../docs/architecture/integration-overview.md), [동기화 정책](../../docs/architecture/sync-policy.md)을 따른다.

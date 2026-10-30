@@ -1,0 +1,50 @@
+Phase 3A working tree (repository-root-relative)
+M = modified; ?? = new/untracked
+Pre-existing: README branding edits and docs/assets/checkmate-icon.png
+
+ M README.md
+ M android-vehicle/app/build.gradle.kts
+ M android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/repository/AccidentRepository.kt
+ M android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/domain/model/AccidentModels.kt
+ M android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/ui/screen/AnalysisScreen.kt
+ M android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/ui/screen/AssistanceScreen.kt
+ M android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/ui/screen/CheckMateApp.kt
+ M android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/ui/screen/ConfirmationScreen.kt
+ M android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/ui/screen/DashboardScreen.kt
+ M android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/ui/screen/RecordsScreen.kt
+ M android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/viewmodel/CheckMateUiState.kt
+ M android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/viewmodel/CheckMateViewModel.kt
+ M android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/viewmodel/CheckMateViewModelFactory.kt
+ M android-vehicle/gradle/libs.versions.toml
+ M android-vehicle/shared/README.md
+?? android-vehicle/app/schemas/com.whitebearcode02.checkmate.vehicle.data.local.AccidentDatabase/1.json
+?? android-vehicle/app/src/androidTest/java/com/whitebearcode02/checkmate/vehicle/RoomAccidentPersistenceTest.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/auth/Authentication.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/contract/AccidentRecordJsonCodec.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/local/AccidentDao.java
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/local/AccidentDatabase.java
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/local/AccidentEntity.java
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/local/AccidentLocalDataSource.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/local/LocalInstallationIdentity.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/remote/FakeRemoteAccidentDataSource.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/remote/RemoteAccidentDataSource.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/remote/RemoteRecordPolicy.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/repository/AccidentSyncStore.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/repository/PersistentAccidentRepository.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/data/sync/SyncCoordinator.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/domain/model/SyncModels.kt
+?? android-vehicle/app/src/main/java/com/whitebearcode02/checkmate/vehicle/ui/screen/PersistenceLabels.kt
+?? android-vehicle/app/src/test/java/com/whitebearcode02/checkmate/vehicle/AccidentRecordJsonCodecTest.kt
+?? android-vehicle/app/src/test/java/com/whitebearcode02/checkmate/vehicle/AccidentSyncTest.kt
+?? android-vehicle/app/src/test/java/com/whitebearcode02/checkmate/vehicle/PersistenceFixtures.kt
+?? android-vehicle/app/src/test/java/com/whitebearcode02/checkmate/vehicle/PersistentAccidentRepositoryTest.kt
+?? android-vehicle/app/src/test/java/com/whitebearcode02/checkmate/vehicle/Phase3ViewModelTest.kt
+?? android-vehicle/docs/PHASE3_CHANGED_FILES.txt
+?? android-vehicle/docs/PHASE3_REPORT.md
+?? docs/architecture/database-design.md
+?? docs/architecture/integration-overview.md
+?? docs/architecture/sync-policy.md
+?? docs/assets/checkmate-icon.png
+?? shared/contracts/README.md
+?? shared/contracts/accident-event.example.json
+?? shared/contracts/accident-event.schema.json
