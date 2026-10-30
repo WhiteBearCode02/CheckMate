@@ -76,7 +76,7 @@ class VehicleProviderTest {
         val provider = PleosVehicleProvider(session)
         provider.connect()
         assertEquals(VehicleError.PERMISSION_DENIED, provider.state.value.error)
-        assertEquals(ConnectionState.FAILED, provider.state.value.connection)
+        assertEquals(ConnectionState.PERMISSION_DENIED, provider.state.value.connection)
         assertEquals(1, session.closeCount)
         assertFalse(provider.state.value.toString().contains("private vehicle identifier"))
     }
@@ -85,7 +85,7 @@ class VehicleProviderTest {
         val session = FakeSession(IllegalStateException("service down"), failOnClose = true)
         val provider = PleosVehicleProvider(session)
         provider.connect()
-        assertEquals(VehicleError.CONNECTION_FAILED, provider.state.value.error)
+        assertEquals(VehicleError.INITIALIZATION_FAILED, provider.state.value.error)
         provider.close()
         assertEquals(ConnectionState.DISCONNECTED, provider.state.value.connection)
         assertEquals(1, session.closeCount)
@@ -125,8 +125,10 @@ class VehicleProviderTest {
     }
 
     private fun parkedState() = VehicleState(
-        connection = ConnectionState.CONNECTED, speedKph = 0.0, movement = VehicleMovement.PARKED,
+        connection = ConnectionState.CONNECTED, source = DataSource.PLEOS,
+        speedKph = 0.0, movement = VehicleMovement.PARKED,
         capabilities = setOf(VehicleCapability.SPEED, VehicleCapability.MOVEMENT),
+        sdkInitialization = SdkInitializationState.INITIALIZED, serviceObserved = true,
     )
 
     private class FakeSession(

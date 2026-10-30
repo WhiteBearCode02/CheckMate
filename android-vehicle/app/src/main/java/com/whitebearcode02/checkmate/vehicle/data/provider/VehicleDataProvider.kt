@@ -7,5 +7,10 @@ interface VehicleDataProvider : AutoCloseable {
     val state: StateFlow<VehicleState>
     fun connect()
     fun disconnect()
+    /** Explicit retry is allowed after the bounded automatic retry budget is exhausted. */
+    fun reconnect() {
+        disconnect()
+        connect()
+    }
     override fun close()
 }

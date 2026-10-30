@@ -136,3 +136,39 @@
 ## 후속 합의 사항
 
 모바일·AI 담당자와 전송 방향, 계약 버전 표기 위치, 파일 전달 권한, 보존·삭제 정책, 중복 수신 처리, 실제 모델 출처와 실패 사유를 합의한 후 직렬화·전송 API를 추가한다. 백엔드·클라우드·유료 서비스·보험사 연결은 이번 계약 초안으로 활성화되지 않는다.
+
+## Phase 2 차량 상태 확장 — 2026-10-30
+
+Phase 1 사고 모델과 `eventId` 관계는 유지한다. 아래 항목은 차량 앱 내부 모델에 추가한 상태·메타데이터이며, 앱 간 전송 API를 구현하거나 외부 계약 버전을 확정한 것은 아니다. 새로운 enum 값과 선택 필드를 모바일·AI와 합의한 후 전송 계층에 반영해야 한다.
+
+| 항목 | 내부 표현 및 의미 |
+| --- | --- |
+| `VehicleState.sdkInitialization` | `NOT_STARTED`, `INITIALIZING`, `INITIALIZED`, `FAILED`, `UNSUPPORTED` |
+| `VehicleState.serviceObserved` | capability/read 응답으로 실제 서비스 응답을 관찰했는지. 초기화 반환만으로 true가 되지 않음 |
+| `VehicleState.readings` | `VehicleDataKind`별 `VehicleDatum` map |
+| `VehicleState.lastUpdatedAtMillis` | 마지막 유효값 수신 시각. 현재값 유효 여부와 별개이며 과거 시각을 현재 시각으로 덮어쓰지 않음 |
+| `VehicleState.retryAttempt` | 최초 시도 이후 자동 재시도 횟수, 기본 0~2 |
+| `VehicleDatum.kind` | `SPEED`, `MOVEMENT`, `BRAKE`, `TURN_SIGNAL`, `DRIVING_MODE`, `ODOMETER`, `DOOR` |
+| `VehicleDatum.value` | `NumberValue`, `StateValue`, `BooleanValue` 또는 null. enum에 항목이 있다는 것은 실제 API가 연결됐다는 뜻이 아님 |
+| `VehicleDatum.unit` | `UNKNOWN`, `KPH`, `KM`, `PERCENT`, `STATE`, `BOOLEAN`. Door Position은 SDK 원시 위치 단계로 처리하며 임의의 %로 바꾸지 않음 |
+| `VehicleDatum.source` | `MOCK` 또는 `PLEOS`, 부모 `VehicleState.source`와 일치 필수 |
+| `VehicleDatum.collectedAtMillis` | 내부 UTC epoch milliseconds. 유효값 수신 시각이며 미래 전송 시 `Instant.ofEpochMilli(...).toString()`의 ISO 8601 표현을 사용 |
+| `VehicleDatum.validity` | `UNKNOWN`, `VALID`, `STALE`, `INVALID` |
+| `VehicleDatum.support` | `UNKNOWN`, `SUPPORTED`, `UNSUPPORTED` |
+| `VehicleDatum.permission` | `UNKNOWN`, `GRANTED`, `DENIED` |
+| `VehicleDatum.updateState` | `WAITING`, `UPDATING`, `STOPPED` |
+
+`ConnectionState`는 기존 값에 `UNSUPPORTED`, `PERMISSION_DENIED`, `ERROR`, `UNKNOWN`을 추가했다. 과거 `FAILED`, `UNAVAILABLE`도 유지하며, SDK 초기화 상태·기능 지원·값의 유효성을 하나의 연결 enum으로 합치지 않는다.
+
+### 신선도와 안전 정책
+
+- 수신 후 5초 이상 지난 값과 시간 역행으로 미래값이 된 샘플은 만료 처리한다. 활성 Provider는 500ms 간격으로 검사하며 SDK 콜백을 반영할 때도 즉시 검증한다.
+- 만료된 속도·정차 정보는 현재 판단에 사용하지 않는다. 이전 수신값을 표시할 때는 과거값·만료·갱신 중단 상태와 시각을 함께 표시한다.
+- 정차 정보는 `MOVEMENT`의 유효한 `PARKED` 샘플·지원·권한·갱신 상태가 필요하다. `PLEOS` 출처이면 SDK 초기화 및 서비스 응답도 확인되어야 한다. 예전 스냅샷의 `movement=PARKED`만으로 상세 화면을 복원하지 않는다.
+- 실제 어댑터는 앞좌석 왼쪽 Door Position만 읽는다. Door 값으로 속도·정차·탑승자 안전을 추정하지 않으므로 실제 모드의 기록·상세 분석은 계속 제한된다.
+- Provider 교체·백그라운드·종료 시 구독과 타이머를 정리하고 정차 신뢰를 폐기한다. 앱 프로세스가 다시 생성되면 연결·정차는 미확인부터 시작한다.
+- 실제 SDK가 `MOCK` 출처의 스냅샷을 전달하면 오류로 거부하며, 실데이터로 이름만 바꾸지 않는다. 연결 실패 후 Mock 자동 전환도 하지 않는다.
+
+연결·각 조회 응답 제한은 5초다. 기본 자동 시도는 총 3회(재시도 간격 500ms·1초)이며 권한 거부·미지원은 자동 반복하지 않는다. 수동 재시도는 새 예산을 시작한다. Door의 on-change 알림과 2초 GET 재조회는 동일한 값이 유지되는 정상 상태와 수신 중단을 구분하기 위한 로컬 IPC다.
+
+차량값은 화면 상태 확인에 필요한 최신 샘플만 메모리에 보관하고, 디스크·서버·로그에 저장하지 않는다. 개인정보·위치·영상 수집은 추가하지 않았다. 실제 환경에서의 수신·권한·정리 결과는 [Phase 2 Pleos 검증 가이드](../docs/PHASE2_PLEOS_TEST_GUIDE.md)와 [Phase 2 보고서](../docs/PHASE2_REPORT.md)에서 구분해 관리한다.

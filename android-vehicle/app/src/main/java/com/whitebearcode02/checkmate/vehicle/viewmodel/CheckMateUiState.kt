@@ -15,6 +15,7 @@ data class CheckMateUiState(
     val prediction: AccidentPrediction? = null,
     val completedSteps: Set<AssistanceStep> = emptySet(),
     val canShowDetails: Boolean = false,
+    val canSelectMock: Boolean = false,
     val notice: String? = null,
 )
 
@@ -29,4 +30,7 @@ data class CheckMateActions(
     val openAnalysis: (UUID) -> Unit,
     val completeAssistanceStep: (AssistanceStep) -> Unit,
     val changeScenario: (MockVehicleScenario) -> Unit,
+    val retryVehicleConnection: () -> Unit = {},
+    val selectVehicleSource: (DataSource) -> Unit = {},
+    val openSafetyGuide: () -> Unit = {},
 )

@@ -67,17 +67,18 @@ fun CheckMateApp(
                 }
                 when (state.screen) {
                     CheckMateScreen.HOME -> dashboardItems(state, actions, developerMode)
+                    CheckMateScreen.SAFETY_GUIDE -> safetyGuideItems(actions)
                     CheckMateScreen.CONFIRMATION -> confirmationItems(state, actions)
                     CheckMateScreen.ASSISTANCE -> assistanceItems(state, actions, developerMode)
                     CheckMateScreen.RECORDS -> recordItems(state, actions)
                     CheckMateScreen.ANALYSIS -> analysisItems(state, actions)
                 }
-                if (state.screen != CheckMateScreen.HOME && state.activeEvent == null) {
+                if (state.screen !in setOf(CheckMateScreen.HOME, CheckMateScreen.SAFETY_GUIDE) && state.activeEvent == null) {
                     item { VehicleAction("홈으로", actions.home, secondary = true) }
                 }
                 item {
                     Text(
-                        "Phase 1 · 기록은 메모리에만 보관되며 앱 프로세스 종료 시 사라집니다.",
+                        "Phase 2 · 차량 데이터와 사고 기록은 메모리에만 보관되며 앱 프로세스 종료 시 사라집니다.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

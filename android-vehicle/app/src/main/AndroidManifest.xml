@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- Request vehicle permissions together with a verified real SDK adapter. -->
+    <!-- Read-only Door Position: verified against the official Vehicle SDK 2.3.2 sample. -->
+    <uses-permission android:name="pleos.car.permission.CAR_DOORS" />
     <application
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
