@@ -4,6 +4,13 @@
   <p><strong>사고의 순간, 확인부터 대응까지.</strong></p>
   <p>차량과 스마트폰을 연결하는 교통사고 대응 지원 서비스</p>
   <p>Hyundai Motor Group App Development Challenge 참가 프로젝트</p>
+  <p align="center">
+    <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.2.10-7F52FF" />
+    <img alt="Android" src="https://img.shields.io/badge/Android-API%2028%2B-3DDC84" />
+    <img alt="Jetpack Compose" src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4" />
+    <img alt="Pleos Connect" src="https://img.shields.io/badge/SDK-Pleos%20Connect-164B7A" />
+    <img alt="Development Status" src="https://img.shields.io/badge/Status-In%20Development-6B7280" />
+  </p>
 </div>
 
 > **현재 개발 단계: Phase 3A — 공통 사고 데이터·로컬 저장·동기화 기반 구현.** 차량 앱의 Pleos Door 어댑터와 Room 저장소, 공통 JSON 계약, Fake 기반 인증·동기화 테스트를 구현했습니다. 실제 Pleos 실행, 스마트폰·클라우드 통신, 영상 분석은 검증 완료 또는 실제 연동 상태가 아닙니다.
